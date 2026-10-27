@@ -1,0 +1,10 @@
+# 依赖（本地开发用，不需要发布）
+node_modules/
+package-lock.json
+
+# 题库生成脚本（开发工具，含本地文件路径，不发布）
+gen_all.js
+
+# 临时文件
+_*.js
+*.tmp
