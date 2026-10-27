@@ -46,7 +46,7 @@
 
 1. 点左上角「⚙ 设置」。
 2. 选择服务商（Anthropic / DeepSeek / OpenAI / 自定义），填入 API Key。
-   - DeepSeek：默认模型 `deepseek-v4-pro[1m]`，接口 `https://api.deepseek.com`
+   - DeepSeek：默认模型 `deepseek-v4-pro`，接口 `https://api.deepseek.com`
    - 也可选「自定义」填任意 OpenAI 兼容的接口地址 + 模型名
 3. 保存后，点「下一题」显示答案时会自动带出 AI 解析（缓存复用）；简答/填空题还有「AI 审阅」按钮。
 

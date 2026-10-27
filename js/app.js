@@ -168,7 +168,7 @@
   // 服务商预设：type = anthropic（Anthropic 接口）或 openai（OpenAI 兼容，DeepSeek/OpenAI/Qwen/Kimi 等）
   var PROVIDERS = {
     anthropic: { label: 'Anthropic（Claude）', baseUrl: 'https://api.anthropic.com', model: 'claude-opus-5-5', type: 'anthropic' },
-    deepseek: { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com', model: 'deepseek-v4-pro[1m]', type: 'openai' },
+    deepseek: { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com', model: 'deepseek-v4-pro', type: 'openai' },
     openai: { label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o', type: 'openai' },
     custom: { label: '自定义（OpenAI 兼容）', baseUrl: '', model: '', type: 'openai' }
   };
@@ -177,6 +177,7 @@
   function callAI(messages) {
     var s = loadSettings();
     if (!s.apiKey) return Promise.reject(new Error('尚未配置 API Key，请点击左上角「⚙ 设置」填写。'));
+    if (s.model === 'deepseek-v4-pro[1m]') s.model = 'deepseek-v4-pro'; // 兼容旧配置的模型名
     var p = providerOf(s);
     return p.type === 'anthropic' ? callAnthropic(s, p, messages) : callOpenAICompatible(s, p, messages);
   }
