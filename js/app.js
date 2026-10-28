@@ -117,47 +117,22 @@
       .replace(/"/g, '&quot;');
   }
 
-  /* ================= 本地模糊判分（填空/简答，无需完全一致） ================= */
+  /* ================= 本地判分（填空/简答：与答案完全一致才算对） ================= */
   function normText(s) {
     return String(s == null ? '' : s).toLowerCase().replace(/[^0-9a-z一-龥]/g, '');
   }
-  function bigrams(s) {
-    var m = {};
-    for (var i = 0; i < s.length - 1; i++) m[s.slice(i, i + 2)] = 1;
-    return m;
-  }
-  function charFreq(s) {
-    var m = {};
-    for (var i = 0; i < s.length; i++) m[s[i]] = (m[s[i]] || 0) + 1;
-    return m;
-  }
-  // 相似度 0~1：先精确/包含，再取「字符 bigram Jaccard」与「单字符 Dice」的较大值
-  function sim(a, b) {
-    var A = normText(a), B = normText(b);
-    if (!A || !B) return A === B ? 1 : 0;
-    if (A === B) return 1;
-    if (A.length <= 12 || B.length <= 12) {
-      if (A.indexOf(B) !== -1 || B.indexOf(A) !== -1) return 1;
-    }
-    var ba = bigrams(A), bb = bigrams(B), inter = 0, nA = 0, nB = 0;
-    for (var k in ba) { nA++; if (bb[k]) inter++; }
-    for (var k in bb) nB++;
-    var union = nA + nB - inter;
-    var jac = union ? inter / union : 0;
-    var fa = charFreq(A), fb = charFreq(B), ci = 0, cs = 0;
-    for (var c in fa) { var inB = fb[c] || 0; ci += Math.min(fa[c], inB); cs += fa[c] + inB; }
-    for (var c2 in fb) if (!fa[c2]) cs += fb[c2];
-    var dice = cs ? 2 * ci / cs : 0;
-    return Math.max(jac, dice);
+  // 忽略大小写、空格与标点后，须与答案完全一致
+  function sameAnswer(a, b) {
+    return normText(a) === normText(b);
   }
   function blankCorrect(q, ans) {
     var exp = Array.isArray(q.answer) ? q.answer : [q.answer];
     var got = Array.isArray(ans) ? ans : [ans];
     if (exp.length !== got.length) return false;
-    return exp.every(function (e, i) { return sim(e, got[i]) >= 0.6; });
+    return exp.every(function (e, i) { return sameAnswer(e, got[i]); });
   }
   function shortCorrect(ref, user) {
-    return sim(user, ref) >= 0.5;
+    return sameAnswer(user, ref);
   }
 
   /* ================= 设置 & 云端 AI（解析 / 审阅） ================= */
@@ -863,7 +838,7 @@
           if (answered) {
             var exp = Array.isArray(q.answer) ? q.answer[i] : q.answer;
             var got = Array.isArray(saved) ? saved[i] : saved;
-            cls = sim(exp, got) >= 0.6 ? ' correct' : ' wrong';
+            cls = sameAnswer(exp, got) ? ' correct' : ' wrong';
           }
           return '<div class="blank-row"><span class="blank-label">' + (i + 1) + '</span>' +
             '<input class="blank-input' + cls + '" data-index="' + i + '"' + valHtml + (answered ? ' disabled' : '') + '>' +
@@ -871,7 +846,7 @@
         }).join('') + '</div>';
       } else if (q.type === 'short') {
         var savedText = answered ? (typeof saved === 'string' ? saved : '') : '';
-        html = '<textarea class="short-input" id="short-input" placeholder="在此写下你的答案（AI 判分，无需与参考答案完全一致）"' +
+        html = '<textarea class="short-input" id="short-input" placeholder="在此写下你的答案（需与参考答案完全一致）"' +
           (answered ? ' disabled' : '') + '>' + (answered ? escapeHtml(savedText) : '') + '</textarea>';
       }
       return html;
@@ -916,7 +891,7 @@
       var showAIExplain = !noAnswer;
       var panelClass = noAnswer ? 'pending' : (correct ? 'correct' : 'wrong');
       var tag = noAnswer ? '📝 本题未提供标准答案（请自行判分，或用下方 AI 审阅）'
-        : (correct ? '✓ 回答正确' : '✗ 回答错误') + (q.type === 'short' ? '（本地判分，可 AI 审阅）' : '');
+        : (correct ? '✓ 回答正确' : '✗ 回答错误') + (q.type === 'short' ? '（本地判分：与答案完全一致才算对，可 AI 审阅）' : '');
       var override = showOverride
         ? '<div class="override-row"><span>手动判分：</span>' +
           '<button class="btn btn-sm" id="override-right">判为正确</button>' +
